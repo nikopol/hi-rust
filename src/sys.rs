@@ -12,7 +12,7 @@ pub fn kernel_info(
     let icon: String = if cheapmode {
         String::from("")
     } else {
-        String::from(" ")
+        String::from("🐧 ")
     };
     let label = format!("{icon}kernel");
     let uname_r = shell("uname -r", &ssh)
@@ -37,7 +37,7 @@ pub fn kernel_info(
     let icon: String = if cheapmode {
         String::from("")
     } else {
-        String::from(" ")
+        String::from("🍎 ")
     };
     let label = format!("{icon}kernel");
     let uname_r = shell("uname -r", &ssh)
@@ -58,7 +58,7 @@ pub fn uptime_info(
     info_fg_color: &ColorVec,
     colormode: u16,
 ) -> Option<String> {
-    let label = format!("{}load/up", if cheapmode { "" } else { " " });
+    let label = format!("{}load/up", if cheapmode { "" } else { "⏳ " });
     let uptime = shell("uptime", &ssh)?;
     let up_part = uptime
         .split(" up ")
@@ -98,7 +98,7 @@ pub fn ip_info(
     info_fg_color: &ColorVec,
     colormode: u16,
 ) -> Option<String> {
-    let label = format!("{}ip", if cheapmode { "" } else { "ﯱ " });
+    let label = format!("{}ip", if cheapmode { "" } else { "🌐 " });
     let output = shell("/sbin/ip -4 addr 2>/dev/null", &ssh)
         .or_else(|| shell("/sbin/ifconfig 2>/dev/null", &ssh))
         .unwrap_or_default();
@@ -128,7 +128,7 @@ pub fn cpu_info(
     info_fg_color: &ColorVec,
     colormode: u16,
 ) -> Option<String> {
-    let label = format!("{}cpu", if cheapmode { "" } else { " " });
+    let label = format!("{}cpu", if cheapmode { "" } else { "💻 " });
     let (brand, cores) = cpuinfo_data(ssh);
     let info = match brand {
         Some(brand) => format!("{cores} x {brand}"),
@@ -150,7 +150,7 @@ pub fn mem_info(
     info_fg_color: &ColorVec,
     colormode: u16,
 ) -> Option<String> {
-    let label = format!("{}mem", if cheapmode { "" } else { " " });
+    let label = format!("{}mem", if cheapmode { "" } else { "🧠 " });
     let info = {
         let free_out = shell("free -m", &ssh).unwrap_or_default();
         let mem_line = free_out.lines().find(|l| l.starts_with("Mem"));
@@ -192,7 +192,7 @@ pub fn mem_info(
     info_fg_color: Option<ColorVec>,
     colormode: u16,
 ) -> Option<String> {
-    let label = format!("{}mem", if cheapmode { "" } else { " " });
+    let label = format!("{}mem", if cheapmode { "" } else { "🧠 " });
     let info = {
         let total = shell("sysctl -n hw.memsize", &ssh)
             .and_then(|s| s.trim().parse::<u64>().ok())

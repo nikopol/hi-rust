@@ -205,8 +205,8 @@ pub fn bar(width: usize, cf: f32, colormode: u16, cheapmode: bool) -> String {
     let color_vec = rgb(color_name, colormode).unwrap_or_default();
     let mut out = String::new();
     out.push_str(&color_sequence(&color_vec, &None, colormode));
-    let used_char = if cheapmode { "#" } else { "" };
-    let free_char = if cheapmode { "-" } else { "" };
+    let used_char = if cheapmode { "#" } else { "⯀" };
+    let free_char = if cheapmode { "-" } else { "▢" };
     out.push_str(&used_char.repeat(used));
     out.push_str(COLOR_RESET);
     out.push_str(&free_char.repeat(free));
