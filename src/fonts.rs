@@ -1,5 +1,50 @@
 use crate::colors::*;
 
+fn truncate_line(line: &str, max_cols: u16) -> String {
+    if max_cols == u16::MAX {
+        return line.to_string();
+    }
+    let max = max_cols as usize;
+    let mut visible = 0usize;
+    let mut iter = line.chars().peekable();
+    while let Some(&ch) = iter.peek() {
+        if ch == '\x1b' {
+            iter.next();
+            for c in iter.by_ref() {
+                if c.is_ascii_alphabetic() { break; }
+            }
+        } else {
+            visible += 1;
+            iter.next();
+        }
+    }
+    if visible <= max {
+        return line.to_string();
+    }
+    let mut result = String::new();
+    let mut count = 0usize;
+    let mut iter = line.chars().peekable();
+    while let Some(&ch) = iter.peek() {
+        if ch == '\x1b' {
+            iter.next();
+            result.push('\x1b');
+            for c in iter.by_ref() {
+                result.push(c);
+                if c.is_ascii_alphabetic() { break; }
+            }
+        } else if count < max - 2 {
+            result.push(ch);
+            iter.next();
+            count += 1;
+        } else {
+            break;
+        }
+    }
+    result.push_str(COLOR_RESET);
+    result.push('…');
+    result
+}
+
 #[derive(Clone, Copy)]
 pub struct Font {
     pub charset: &'static str,
@@ -67,6 +112,7 @@ impl Font {
         fg: &ColorVec,
         bg: &Option<ColorVec>,
         colormode: u16,
+        max_cols: u16,
     ) {
         for (y, row) in chars_bmp.iter().enumerate() {
             let mut line = String::new();
@@ -85,8 +131,8 @@ impl Font {
                 line.push_str(COLOR_RESET);
                 line.push_str(comment);
             }
-            line.push_str(COLOR_RESET);
-            println!("{line}");
+            print!("{}", truncate_line(&line, max_cols));
+            println!("{}", COLOR_RESET);
         }
     }
 
@@ -98,6 +144,7 @@ impl Font {
         fg: &ColorVec,
         bg: &Option<ColorVec>,
         colormode: u16,
+        max_cols: u16,
     ) {
         if chars_bmp.is_empty() {
             return;
@@ -143,8 +190,8 @@ impl Font {
                 line.push_str(COLOR_RESET);
                 line.push_str(comment);
             }
-            line.push_str(COLOR_RESET);
-            println!("{line}");
+            print!("{}", truncate_line(&line, max_cols));
+            println!("{}", COLOR_RESET);
         }
     }
 
@@ -157,6 +204,7 @@ impl Font {
         fg_color: &ColorVec,
         bg_color: &Option<ColorVec>,
         colormode: u16,
+        max_cols: u16,
     ) -> Result<(), String> {
         let chars_bmp = self.parse_font_bmp();
         let chars_idx = Self::get_chars_idx(self.charset, text);
@@ -177,10 +225,18 @@ impl Font {
                 fg_color,
                 bg_color,
                 colormode,
+                max_cols,
             );
         } else {
             Self::draw(
-                &chars_idx, &chars_bmp, info_lines, width, fg_color, bg_color, colormode,
+                &chars_idx,
+                &chars_bmp,
+                info_lines,
+                width,
+                fg_color,
+                bg_color,
+                colormode,
+                max_cols,
             );
         }
 

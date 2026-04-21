@@ -24,6 +24,7 @@ fn run() -> Result<(), String> {
             &cfg.fg_color,
             &cfg.bg_color,
             cfg.colormode,
+            cfg.max_cols,
         );
     } else {
         return Err("unknown font".to_string());
@@ -46,6 +47,8 @@ struct Config {
     rootmode: bool,
     fg_color: ColorVec,
     bg_color: Option<ColorVec>,
+    max_cols: u16,
+    no_wrap: bool,
 }
 
 impl Config {
@@ -71,6 +74,7 @@ options:
 -s[mall]          set small mode (default font only)
 -i[nfo]=kumic     choose info to display
 -ssh=remote       ssh hostname
+-nw               no wrap
 
 infos can be given as follow:
 k=kernel   u=uptime   c=cpumodel
@@ -140,6 +144,7 @@ available fonts: {fonts}
                         };
                     }
                     "s" | "small" => cfg.small = true,
+                    "nw" | "nowrap" => cfg.no_wrap = true,
                     "h" | "help" => return Err(Self::help()),
                     "ssh" => {
                         cfg.ssh = value_in_arg
@@ -203,6 +208,12 @@ available fonts: {fonts}
             &String::from("kicmu")
         };
 
+        if !cfg.no_wrap  {
+            (cfg.max_cols, _) = term_size();
+        } else {
+            cfg.max_cols = u16::MAX
+        }
+
         let mut infos = Vec::new();
         for ch in info_spec.to_lowercase().chars() {
             if let Some(info) = match ch {
@@ -224,6 +235,7 @@ available fonts: {fonts}
     }
 
     fn split_option(arg: &str) -> (&str, Option<&str>) {
+        let arg = arg.trim_start_matches('-');
         if let Some(idx) = arg.find('=') {
             (&arg[..idx], Some(&arg[idx + 1..]))
         } else {

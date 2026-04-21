@@ -2,6 +2,27 @@ use std::process::Command;
 
 use crate::colors::*;
 
+pub fn term_size() -> (u16, u16) {
+    #[repr(C)]
+    struct Winsize {
+        ws_row: u16,
+        ws_col: u16,
+        ws_xpixel: u16,
+        ws_ypixel: u16,
+    }
+    extern "C" {
+        fn ioctl(fd: i32, request: u64, ...) -> i32;
+    }
+    let mut ws = Winsize { ws_row: 0, ws_col: 0, ws_xpixel: 0, ws_ypixel: 0 };
+    // TIOCGWINSZ = 0x5413 on Linux, 0x40087468 on macOS
+    #[cfg(target_os = "linux")]
+    let tiocgwinsz: u64 = 0x5413;
+    #[cfg(target_os = "macos")]
+    let tiocgwinsz: u64 = 0x40087468;
+    unsafe { ioctl(1, tiocgwinsz, &mut ws) };
+    (ws.ws_col, ws.ws_row)
+}
+
 #[cfg(target_os = "linux")]
 pub fn kernel_info(
     cheapmode: bool,
