@@ -1,48 +1,31 @@
 use crate::colors::*;
 
-fn truncate_line(line: &str, max_cols: u16) -> String {
+fn trunc_println(line: &str, max_cols: u16) {
     if max_cols == u16::MAX {
-        return line.to_string();
+        println!("{line}");
+        return;
     }
     let max = max_cols as usize;
-    let mut visible = 0usize;
-    let mut iter = line.chars().peekable();
-    while let Some(&ch) = iter.peek() {
-        if ch == '\x1b' {
-            iter.next();
-            for c in iter.by_ref() {
-                if c.is_ascii_alphabetic() { break; }
-            }
-        } else {
-            visible += 1;
-            iter.next();
-        }
-    }
-    if visible <= max {
-        return line.to_string();
-    }
-    let mut result = String::new();
     let mut count = 0usize;
     let mut iter = line.chars().peekable();
     while let Some(&ch) = iter.peek() {
         if ch == '\x1b' {
             iter.next();
-            result.push('\x1b');
+            print!("\x1b");
             for c in iter.by_ref() {
-                result.push(c);
+                print!("{c}");
                 if c.is_ascii_alphabetic() { break; }
             }
         } else if count < max - 2 {
-            result.push(ch);
+            print!("{ch}");
             iter.next();
             count += 1;
         } else {
+            print!("{COLOR_RESET}…");
             break;
         }
     }
-    result.push_str(COLOR_RESET);
-    result.push('…');
-    result
+    println!("{COLOR_RESET}");
 }
 
 #[derive(Clone, Copy)]
@@ -131,8 +114,7 @@ impl Font {
                 line.push_str(COLOR_RESET);
                 line.push_str(comment);
             }
-            print!("{}", truncate_line(&line, max_cols));
-            println!("{}", COLOR_RESET);
+            trunc_println(&line, max_cols);
         }
     }
 
@@ -190,8 +172,7 @@ impl Font {
                 line.push_str(COLOR_RESET);
                 line.push_str(comment);
             }
-            print!("{}", truncate_line(&line, max_cols));
-            println!("{}", COLOR_RESET);
+            trunc_println(&line, max_cols);
         }
     }
 
