@@ -202,6 +202,10 @@ available fonts: {fonts}
 
         let info_spec = if let Some(spec) = cfg.info.as_ref() {
             spec
+        } else if !text_parts.is_empty() {
+            // when text is provided and no -i,
+            // consider we want text only
+            &String::from("")
         } else if cfg.small {
             &String::from("imu")
         } else {
