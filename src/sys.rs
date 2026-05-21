@@ -1,6 +1,12 @@
 use std::process::Command;
-
 use crate::colors::*;
+
+/* ███ █ █ ███ 
+   █   █ █ █   
+   ███ ███ ███ 
+     █  █    █ 
+   ███  █  ███ */
+
 
 pub fn term_size() -> (u16, u16) {
     #[repr(C)]
@@ -25,12 +31,12 @@ pub fn term_size() -> (u16, u16) {
 
 #[cfg(target_os = "linux")]
 pub fn kernel_info(
-    cheapmode: bool,
+    cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    colormode: u16,
+    color_mode: u16,
 ) -> Option<String> {
-    let icon: String = if cheapmode {
+    let icon: String = if cheap_mode {
         String::from("")
     } else {
         String::from("🐧 ")
@@ -43,19 +49,19 @@ pub fn kernel_info(
         &label,
         &uname_r,
         info_fg_color,
-        colormode,
-        cheapmode,
+        color_mode,
+        cheap_mode,
     ))
 }
 
 #[cfg(target_os = "macos")]
 pub fn kernel_info(
-    cheapmode: bool,
+    cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    colormode: u16,
+    color_mode: u16,
 ) -> Option<String> {
-    let icon: String = if cheapmode {
+    let icon: String = if cheap_mode {
         String::from("")
     } else {
         String::from("🍎 ")
@@ -68,18 +74,18 @@ pub fn kernel_info(
         &label,
         &uname_r,
         info_fg_color,
-        colormode,
-        cheapmode,
+        color_mode,
+        cheap_mode,
     ))
 }
 
 pub fn uptime_info(
-    cheapmode: bool,
+    cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    colormode: u16,
+    color_mode: u16,
 ) -> Option<String> {
-    let label = format!("{}load/up", if cheapmode { "" } else { "⏳ " });
+    let label = format!("{}load/up", if cheap_mode { "" } else { "⏳ " });
     let uptime = shell("uptime", &ssh)?;
     let up_part = uptime
         .split(" up ")
@@ -102,24 +108,24 @@ pub fn uptime_info(
     let nbcores = cpubrand.1.max(1) as f32;
     let load_val = first_load_val.parse::<f32>().unwrap_or(0.0);
     let cf = (load_val / nbcores).clamp(0.0, 1.0);
-    let bar_str = bar(10, cf, colormode, cheapmode);
+    let bar_str = bar(10, cf, color_mode, cheap_mode);
     let info = format!("{bar_str} {load_str} ({up_part})");
     Some(label_with_info(
         &label,
         &info,
         info_fg_color,
-        colormode,
-        cheapmode,
+        color_mode,
+        cheap_mode,
     ))
 }
 
 pub fn ip_info(
-    cheapmode: bool,
+    cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    colormode: u16,
+    color_mode: u16,
 ) -> Option<String> {
-    let label = format!("{}ip", if cheapmode { "" } else { "🌐 " });
+    let label = format!("{}ip", if cheap_mode { "" } else { "🌐 " });
     let output = shell("/sbin/ip -4 addr 2>/dev/null", &ssh)
         .or_else(|| shell("/sbin/ifconfig 2>/dev/null", &ssh))
         .unwrap_or_default();
@@ -138,18 +144,18 @@ pub fn ip_info(
         &label,
         &info,
         info_fg_color,
-        colormode,
-        cheapmode,
+        color_mode,
+        cheap_mode,
     ))
 }
 
 pub fn cpu_info(
-    cheapmode: bool,
+    cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    colormode: u16,
+    color_mode: u16,
 ) -> Option<String> {
-    let label = format!("{}cpu", if cheapmode { "" } else { "💻 " });
+    let label = format!("{}cpu", if cheap_mode { "" } else { "💻 " });
     let (brand, cores) = cpuinfo_data(ssh);
     let info = match brand {
         Some(brand) => format!("{cores} x {brand}"),
@@ -159,19 +165,19 @@ pub fn cpu_info(
         &label,
         &info,
         info_fg_color,
-        colormode,
-        cheapmode,
+        color_mode,
+        cheap_mode,
     ))
 }
 
 #[cfg(target_os = "linux")]
 pub fn mem_info(
-    cheapmode: bool,
+    cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    colormode: u16,
+    color_mode: u16,
 ) -> Option<String> {
-    let label = format!("{}mem", if cheapmode { "" } else { "🧠 " });
+    let label = format!("{}mem", if cheap_mode { "" } else { "🧠 " });
     let info = {
         let free_out = shell("free -m", &ssh).unwrap_or_default();
         let mem_line = free_out.lines().find(|l| l.starts_with("Mem"));
@@ -183,7 +189,7 @@ pub fn mem_info(
                 if total > 0.0 {
                     format!(
                         "{} {}mo used / {}mo",
-                        bar(10, used / total, colormode, cheapmode),
+                        bar(10, used / total, color_mode, cheap_mode),
                         used as i32,
                         total as i32
                     )
@@ -201,19 +207,19 @@ pub fn mem_info(
         &label,
         &info,
         info_fg_color,
-        colormode,
-        cheapmode,
+        color_mode,
+        cheap_mode,
     ))
 }
 
 #[cfg(target_os = "macos")]
 pub fn mem_info(
-    cheapmode: bool,
+    cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: Option<ColorVec>,
-    colormode: u16,
+    color_mode: u16,
 ) -> Option<String> {
-    let label = format!("{}mem", if cheapmode { "" } else { "🧠 " });
+    let label = format!("{}mem", if cheap_mode { "" } else { "🧠 " });
     let info = {
         let total = shell("sysctl -n hw.memsize", &ssh)
             .and_then(|s| s.trim().parse::<u64>().ok())
@@ -248,12 +254,12 @@ pub fn mem_info(
             let used = 4096 * (wired + active) / 1024 / 1024;
             format!(
                 "{} {}",
-                bar(10, used as f32 / total as f32, colormode, cheapmode),
+                bar(10, used as f32 / total as f32, color_mode, cheap_mode),
                 format!("{used}mo used / {total}mo")
             )
         }
     };
-    Some(label_with_info(&label, &info, info_fg_color, colormode))
+    Some(label_with_info(&label, &info, info_fg_color, color_mode))
 }
 
 #[cfg(target_os = "linux")]
@@ -289,12 +295,12 @@ fn label_with_info(
     label: &str,
     info: &str,
     info_fg_color: &ColorVec,
-    colormode: u16,
-    cheapmode: bool,
+    color_mode: u16,
+    cheap_mode: bool,
 ) -> String {
     let mut out = String::new();
-    out.push_str(&color_sequence(info_fg_color, &None, colormode));
-    let fmtlabel = if cheapmode {
+    out.push_str(&color_sequence(info_fg_color, &None, color_mode));
+    let fmtlabel = if cheap_mode {
         format!("{:<8}", label)
     } else {
         format!("{:<10}", label)

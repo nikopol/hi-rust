@@ -23,7 +23,7 @@ fn run() -> Result<(), String> {
             cfg.maxcols,
             &cfg.fg_color,
             &cfg.bg_color,
-            cfg.colormode,
+            cfg.color_mode,
             cfg.max_cols,
         );
     } else {
@@ -40,10 +40,10 @@ struct Config {
     text: String,
     font_name: Option<String>,
     info_lines: Vec<String>,
-    colormode: u16,
+    color_mode: u16,
     ssh: Option<String>,
     maxcols: Option<usize>,
-    cheapmode: bool,
+    cheap_mode: bool,
     rootmode: bool,
     fg_color: ColorVec,
     bg_color: Option<ColorVec>,
@@ -129,13 +129,13 @@ available fonts: {fonts}
                             .or_else(|| Self::next_arg(args, &mut i));
                         cfg.info = value;
                     }
-                    "1" | "16" | "256" => cfg.colormode = name.parse().unwrap(),
-                    "m" | "mono" => cfg.colormode = 1,
+                    "1" | "16" | "256" => cfg.color_mode = name.parse().unwrap(),
+                    "m" | "mono" => cfg.color_mode = 1,
                     "c" | "color" | "colors" => {
                         let value = value_in_arg
                             .map(str::to_string)
                             .or_else(|| Self::next_arg(args, &mut i));
-                        cfg.colormode = match value.unwrap_or("?".to_string()).as_str() {
+                        cfg.color_mode = match value.unwrap_or("?".to_string()).as_str() {
                             "mono" => 1,
                             "1" => 1,
                             "16" => 16,
@@ -162,17 +162,17 @@ available fonts: {fonts}
             i += 1;
         }
 
-        cfg.cheapmode = env::var("TERM").map(|t| t == "linux").unwrap_or(false);
+        cfg.cheap_mode = env::var("TERM").map(|t| t == "linux").unwrap_or(false);
         cfg.rootmode = env::var("USER").map(|u| u == "root").unwrap_or(false);
-        if cfg.cheapmode {
+        if cfg.cheap_mode {
             cfg.small = false;
-            cfg.colormode = 16;
-        } else if cfg.colormode == 0 {
-            cfg.colormode = 256;
+            cfg.color_mode = 16;
+        } else if cfg.color_mode == 0 {
+            cfg.color_mode = 256;
         }
 
         let fg_spec = cfg.fg.as_ref().map(|fg| fg.as_str()).unwrap_or_else(|| {
-            if cfg.cheapmode {
+            if cfg.cheap_mode {
                 if cfg.rootmode {
                     "red"
                 } else {
@@ -185,12 +185,12 @@ available fonts: {fonts}
             }
         });
 
-        cfg.fg_color = rgb(fg_spec, cfg.colormode)?;
+        cfg.fg_color = rgb(fg_spec, cfg.color_mode)?;
         cfg.bg_color = match cfg.bg.as_ref() {
-            Some(bg) => Some(rgb(&bg, cfg.colormode)?),
+            Some(bg) => Some(rgb(&bg, cfg.color_mode)?),
             None => None,
         };
-        let info_fg_color = rgb("grey", cfg.colormode)?;
+        let info_fg_color = rgb("grey", cfg.color_mode)?;
 
         cfg.text = if text_parts.is_empty() {
             let hostname = shell("hostname", &cfg.ssh).unwrap_or_else(|| "localhost".into());
@@ -221,11 +221,11 @@ available fonts: {fonts}
         let mut infos = Vec::new();
         for ch in info_spec.to_lowercase().chars() {
             if let Some(info) = match ch {
-                'k' => kernel_info(cfg.cheapmode, &cfg.ssh, &info_fg_color, cfg.colormode),
-                'u' => uptime_info(cfg.cheapmode, &cfg.ssh, &info_fg_color, cfg.colormode),
-                'i' => ip_info(cfg.cheapmode, &cfg.ssh, &info_fg_color, cfg.colormode),
-                'c' => cpu_info(cfg.cheapmode, &cfg.ssh, &info_fg_color, cfg.colormode),
-                'm' => mem_info(cfg.cheapmode, &cfg.ssh, &info_fg_color, cfg.colormode),
+                'k' => kernel_info(cfg.cheap_mode, &cfg.ssh, &info_fg_color, cfg.color_mode),
+                'u' => uptime_info(cfg.cheap_mode, &cfg.ssh, &info_fg_color, cfg.color_mode),
+                'i' => ip_info(cfg.cheap_mode, &cfg.ssh, &info_fg_color, cfg.color_mode),
+                'c' => cpu_info(cfg.cheap_mode, &cfg.ssh, &info_fg_color, cfg.color_mode),
+                'm' => mem_info(cfg.cheap_mode, &cfg.ssh, &info_fg_color, cfg.color_mode),
                 _ => None,
             } {
                 infos.push(info);

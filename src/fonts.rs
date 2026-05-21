@@ -1,6 +1,14 @@
 use crate::colors::*;
 
-fn trunc_println(line: &str, max_cols: u16) {
+
+/* ███ ███ ██  ███ ███ 
+   █   █ █ █ █  █  █   
+   ██  █ █ █ █  █  ███ 
+   █   █ █ █ █  █    █ 
+   █   ███ █ █  █  ███ */
+
+
+fn trunc_println(line: &str, max_cols: u16, color_mode: u16) {
     if max_cols == u16::MAX {
         println!("{line}");
         return;
@@ -21,11 +29,16 @@ fn trunc_println(line: &str, max_cols: u16) {
             iter.next();
             count += 1;
         } else {
-            print!("{COLOR_RESET}…");
+            if color_mode > 1 {
+                print!("{COLOR_RESET}…");
+            }
             break;
         }
     }
-    println!("{COLOR_RESET}");
+    if color_mode > 1 {
+        print!("{COLOR_RESET}");
+    }
+    println!("")
 }
 
 #[derive(Clone, Copy)]
@@ -94,7 +107,7 @@ impl Font {
         width: usize,
         fg: &ColorVec,
         bg: &Option<ColorVec>,
-        colormode: u16,
+        color_mode: u16,
         max_cols: u16,
     ) {
         for (y, row) in chars_bmp.iter().enumerate() {
@@ -104,17 +117,21 @@ impl Font {
                 let glyph = row.get(idx).copied().unwrap_or(" ");
                 for ch in glyph.chars().chain(Some(' ')) {
                     let ch = if ch == '.' { ' ' } else { ch };
-                    let color_vec = gradient_color(fg, (r as f32) / (width.max(1) as f32));
-                    line.push_str(&color_sequence(&color_vec, bg, colormode));
+                    if color_mode > 1 {
+                        let color_vec = gradient_color(fg, (r as f32) / (width.max(1) as f32));
+                        line.push_str(&color_sequence(&color_vec, bg, color_mode));
+                    }
                     line.push(ch);
                     r += 1;
                 }
             }
             if let Some(comment) = info_lines.get(y) {
-                line.push_str(COLOR_RESET);
+                if color_mode > 1 {
+                    line.push_str(COLOR_RESET);
+                }
                 line.push_str(comment);
             }
-            trunc_println(&line, max_cols);
+            trunc_println(&line, max_cols, color_mode);
         }
     }
 
@@ -125,7 +142,7 @@ impl Font {
         width: usize,
         fg: &ColorVec,
         bg: &Option<ColorVec>,
-        colormode: u16,
+        color_mode: u16,
         max_cols: u16,
     ) {
         if chars_bmp.is_empty() {
@@ -162,17 +179,21 @@ impl Font {
                     if l2.get(j + 1).copied().unwrap_or('.') != '.' {
                         b += 8;
                     }
-                    let color_vec = gradient_color(fg, (r as f32) / (width.max(1) as f32));
-                    line.push_str(&color_sequence(&color_vec, bg, colormode));
+                    if color_mode > 1 {
+                        let color_vec = gradient_color(fg, (r as f32) / (width.max(1) as f32));
+                        line.push_str(&color_sequence(&color_vec, bg, color_mode));
+                    }
                     line.push_str(SMALL_DOTS.get(b).unwrap_or(&" "));
                     r += 1;
                 }
             }
             if let Some(comment) = info_lines.get(y / 2) {
-                line.push_str(COLOR_RESET);
+                if color_mode > 1 {
+                    line.push_str(COLOR_RESET);
+                }
                 line.push_str(comment);
             }
-            trunc_println(&line, max_cols);
+            trunc_println(&line, max_cols, color_mode);
         }
     }
 
@@ -184,7 +205,7 @@ impl Font {
         maxcols: Option<usize>,
         fg_color: &ColorVec,
         bg_color: &Option<ColorVec>,
-        colormode: u16,
+        color_mode: u16,
         max_cols: u16,
     ) -> Result<(), String> {
         let chars_bmp = self.parse_font_bmp();
@@ -205,7 +226,7 @@ impl Font {
                 width / 2,
                 fg_color,
                 bg_color,
-                colormode,
+                color_mode,
                 max_cols,
             );
         } else {
@@ -216,7 +237,7 @@ impl Font {
                 width,
                 fg_color,
                 bg_color,
-                colormode,
+                color_mode,
                 max_cols,
             );
         }
