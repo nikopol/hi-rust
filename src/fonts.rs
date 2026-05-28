@@ -8,7 +8,7 @@ use crate::colors::*;
    █   ███ █ █  █  ███ */
 
 
-fn trunc_println(line: &str, max_cols: u16, color_mode: u16) {
+fn trunc_println(line: &str, max_cols: u16, color_mode: u16, prefix: Option<&str>) {
     if max_cols == u16::MAX {
         println!("{line}");
         return;
@@ -16,6 +16,10 @@ fn trunc_println(line: &str, max_cols: u16, color_mode: u16) {
     let max = max_cols as usize;
     let mut count = 0usize;
     let mut iter = line.chars().peekable();
+    if let Some(p) = &prefix {
+        count = p.len();
+        print!("{p}");
+    }
     while let Some(&ch) = iter.peek() {
         if ch == '\x1b' {
             iter.next();
@@ -109,6 +113,7 @@ impl Font {
         bg: &Option<ColorVec>,
         color_mode: u16,
         max_cols: u16,
+        prefix: Option<&str>
     ) {
         for (y, row) in chars_bmp.iter().enumerate() {
             let mut line = String::new();
@@ -131,7 +136,7 @@ impl Font {
                 }
                 line.push_str(comment);
             }
-            trunc_println(&line, max_cols, color_mode);
+            trunc_println(&line, max_cols, color_mode, prefix);
         }
     }
 
@@ -144,6 +149,7 @@ impl Font {
         bg: &Option<ColorVec>,
         color_mode: u16,
         max_cols: u16,
+        prefix: Option<&str>
     ) {
         if chars_bmp.is_empty() {
             return;
@@ -193,7 +199,7 @@ impl Font {
                 }
                 line.push_str(comment);
             }
-            trunc_println(&line, max_cols, color_mode);
+            trunc_println(&line, max_cols, color_mode, prefix);
         }
     }
 
@@ -207,6 +213,7 @@ impl Font {
         bg_color: &Option<ColorVec>,
         color_mode: u16,
         max_cols: u16,
+        prefix: Option<&str>
     ) -> Result<(), String> {
         let chars_bmp = self.parse_font_bmp();
         let chars_idx = Self::get_chars_idx(self.charset, text);
@@ -228,6 +235,7 @@ impl Font {
                 bg_color,
                 color_mode,
                 max_cols,
+                prefix
             );
         } else {
             Self::draw(
@@ -239,6 +247,7 @@ impl Font {
                 bg_color,
                 color_mode,
                 max_cols,
+                prefix
             );
         }
 

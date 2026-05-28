@@ -25,6 +25,7 @@ fn run() -> Result<(), String> {
             &cfg.bg_color,
             cfg.color_mode,
             cfg.max_cols,
+            cfg.comment.as_deref(),
         );
     } else {
         return Err("unknown font".to_string());
@@ -49,6 +50,7 @@ struct Config {
     bg_color: Option<ColorVec>,
     max_cols: u16,
     no_wrap: bool,
+    comment: Option<String>
 }
 
 impl Config {
@@ -75,6 +77,7 @@ options:
 -i[nfo]=kumic     choose info to display
 -ssh=remote       ssh hostname
 -nw               no wrap
+-com[ment][=c|p]  # comment mode c or python style
 
 infos can be given as follow:
 k=kernel   u=uptime   c=cpumodel
@@ -151,6 +154,10 @@ available fonts: {fonts}
                             .map(str::to_string)
                             .or_else(|| Self::next_arg(args, &mut i));
                     }
+                    "co" | "com" | "comment" => {
+                        let value = if value_in_arg == Some("c") { "// " } else { "# " };
+                        cfg.comment = Some(value.to_string())
+                    }
                     other if other.is_empty() => {}
                     other => {
                         return Err(format!("unknown option -{other}"));
@@ -160,6 +167,10 @@ available fonts: {fonts}
                 text_parts.push(arg.clone());
             }
             i += 1;
+        }
+
+        if cfg.comment.is_some() {
+            cfg.color_mode = 1
         }
 
         cfg.cheap_mode = env::var("TERM").map(|t| t == "linux").unwrap_or(false);
