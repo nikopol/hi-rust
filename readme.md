@@ -5,7 +5,7 @@ it works on linux (osx need to be tested) and requires a terminal with unicode a
 
 ## --help
 ```
-hi 0.1.0
+hi 0.1.2
 
 syntax: hi [-options] [text]
 
@@ -17,10 +17,12 @@ options:
 -c[olor]=1|16|256 set color mode
 -1|16|256         set color mode as well
 -m[ono]           set color mode to 1
--font=default     font name (available: default,hashtag)
+-font=default     font name (available: default,dots,hashtag)
 -s[mall]          set small mode (default font only)
 -i[nfo]=kumic     choose info to display
 -ssh=remote       ssh hostname
+-nw               no wrap
+-com[ment][=c|p]  # comment mode c or python style
 
 infos can be given as follow:
 k=kernel   u=uptime   c=cpumodel
@@ -38,7 +40,7 @@ color-color   eg: white-blue
                   fff-00f
 
 available colors: black,bright_black,red,bright_red,green,bright_green,yellow,bright_yellow,blue,bright_blue,magenta,bright_magenta,cyan,bright_cyan,white,bright_white,grey
-available fonts: default,hashtag
+available fonts: default,dots,hashtag
 ```
 
 ## build
