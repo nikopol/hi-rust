@@ -1,3 +1,4 @@
+use std::env;
 use std::process::Command;
 use crate::colors::*;
 
@@ -27,6 +28,20 @@ pub fn term_size() -> (u16, u16) {
     let tiocgwinsz: u64 = 0x40087468;
     unsafe { ioctl(1, tiocgwinsz, &mut ws) };
     (ws.ws_col, ws.ws_row)
+}
+
+pub fn detect_color_mode() -> u32 {
+    if let Ok(v) = env::var("COLORTERM") {
+        if v == "truecolor" || v == "24bit" {
+            return TRUE_COLOR;
+        }
+    }
+    if let Ok(term) = env::var("TERM") {
+        if term.contains("256color") {
+            return 256;
+        }
+    }
+    16
 }
 
 #[cfg(target_os = "linux")]

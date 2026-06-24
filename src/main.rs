@@ -59,6 +59,7 @@ impl Config {
         let colors = color_names();
         let name = env!("CARGO_PKG_NAME");
         let version = env!("CARGO_PKG_VERSION");
+        let cms = match detect_color_mode() { TRUE_COLOR => "16M".into(), cm => cm.to_string() };
         format!(
             "{name} {version}
 
@@ -96,6 +97,14 @@ color-color   eg: white-blue
 
 available colors: {colors}
 available fonts: {fonts}
+
+default color mode is:
+* TERM contains linux         → 16 (+ no emojis)
+* COLORTERM=truecolor / 24bit → 16M
+* TERM contains 256color      → 256
+* fallback                    → 16
+
+default detected color mode on your sys: {cms}
 "
         )
     }
@@ -182,7 +191,7 @@ available fonts: {fonts}
             cfg.small = false;
             cfg.color_mode = 16;
         } else if cfg.color_mode == 0 {
-            cfg.color_mode = TRUE_COLOR;
+            cfg.color_mode = detect_color_mode();
         }
 
         let fg_spec = cfg.fg.as_ref().map(|fg| fg.as_str()).unwrap_or_else(|| {
