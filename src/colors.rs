@@ -4,6 +4,9 @@
    █   █ █ █   █ █ █ █   █ 
    ███ ███ ███ ███ █ █ ███ */
 
+
+pub const TRUE_COLOR: u32 = u32::MAX;
+
 const COLOR_TABLE: [(&str, (u8, u8, u8)); 17] = [
     ("black", (0x00, 0x00, 0x00)),
     ("bright_black", (0x82, 0x82, 0x82)),
@@ -65,7 +68,7 @@ fn color_by_exact_name(name: &str) -> Option<(u8, u8, u8)> {
 
 pub type ColorVec = Vec<i32>;
 
-pub fn rgb(spec: &str, color_mode: u16) -> Result<ColorVec, String> {
+pub fn rgb(spec: &str, color_mode: u32) -> Result<ColorVec, String> {
     if let Some(idx) = spec.find('-') {
         let (left, right) = spec.split_at(idx);
         let right = &right[1..];
@@ -126,8 +129,8 @@ fn parse_color_name(spec: &str) -> Option<(u8, u8, u8)> {
     color_by_name(spec)
 }
 
-fn convert_rgb(rgb: (u8, u8, u8), color_mode: u16) -> ColorVec {
-    if color_mode == 256 {
+fn convert_rgb(rgb: (u8, u8, u8), color_mode: u32) -> ColorVec {
+    if color_mode == 256 || color_mode == TRUE_COLOR {
         vec![rgb.0 as i32, rgb.1 as i32, rgb.2 as i32]
     } else {
         vec![nearest_ansi(rgb) as i32]
@@ -163,7 +166,7 @@ pub fn gradient_color(color: &ColorVec, ratio: f32) -> ColorVec {
     }
 }
 
-pub fn color_sequence(fg: &ColorVec, bg: &Option<ColorVec>, color_mode: u16) -> String {
+pub fn color_sequence(fg: &ColorVec, bg: &Option<ColorVec>, color_mode: u32) -> String {
     let mut out = String::new();
     out.push_str(&term_color(false, fg, color_mode));
     if let Some(color) = bg {
@@ -172,7 +175,7 @@ pub fn color_sequence(fg: &ColorVec, bg: &Option<ColorVec>, color_mode: u16) -> 
     out
 }
 
-fn term_color(is_bg: bool, color: &ColorVec, color_mode: u16) -> String {
+fn term_color(is_bg: bool, color: &ColorVec, color_mode: u32) -> String {
     if color_mode == 16 {
         let mut code = color.get(0).copied().unwrap_or(39);
         if is_bg {
@@ -183,18 +186,21 @@ fn term_color(is_bg: bool, color: &ColorVec, color_mode: u16) -> String {
     if color.len() < 3 {
         return String::new();
     }
+    let pfx: u8 = if is_bg { 48 } else { 38 };
+    if color_mode == TRUE_COLOR {
+        return format!("\x1b[{pfx};2;{};{};{}m", color[0], color[1], color[2]);
+    }
     let cf = 6.0 / 256.0;
     let col = 16
         + (color[0] as f32 * cf).floor() as i32 * 36
         + (color[1] as f32 * cf).floor() as i32 * 6
         + (color[2] as f32 * cf).floor() as i32;
-    let pfx: u8 = if is_bg { 48 } else { 38 };
     format!("\x1b[{pfx};5;{col}m")
 }
 
 pub const COLOR_RESET: &str = "\x1b[0m";
 
-pub fn bar(width: usize, cf: f32, color_mode: u16, cheap_mode: bool) -> String {
+pub fn bar(width: usize, cf: f32, color_mode: u32, cheap_mode: bool) -> String {
     let cf = cf.clamp(0.0, 1.0);
     let mut used = (width as f32 * cf).floor() as usize;
     if used > width {

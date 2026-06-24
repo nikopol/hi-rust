@@ -34,7 +34,7 @@ pub fn kernel_info(
     cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    color_mode: u16,
+    color_mode: u32,
 ) -> Option<String> {
     let icon: String = if cheap_mode {
         String::from("")
@@ -59,7 +59,7 @@ pub fn kernel_info(
     cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    color_mode: u16,
+    color_mode: u32,
 ) -> Option<String> {
     let icon: String = if cheap_mode {
         String::from("")
@@ -83,7 +83,7 @@ pub fn uptime_info(
     cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    color_mode: u16,
+    color_mode: u32,
 ) -> Option<String> {
     let label = format!("{}load/up", if cheap_mode { "" } else { "⏳ " });
     let uptime = shell("uptime", &ssh)?;
@@ -123,7 +123,7 @@ pub fn ip_info(
     cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    color_mode: u16,
+    color_mode: u32,
 ) -> Option<String> {
     let label = format!("{}ip", if cheap_mode { "" } else { "🌐 " });
     let output = shell("/sbin/ip -4 addr 2>/dev/null", &ssh)
@@ -153,7 +153,7 @@ pub fn cpu_info(
     cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    color_mode: u16,
+    color_mode: u32,
 ) -> Option<String> {
     let label = format!("{}cpu", if cheap_mode { "" } else { "💻 " });
     let (brand, cores) = cpuinfo_data(ssh);
@@ -175,7 +175,7 @@ pub fn mem_info(
     cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: &ColorVec,
-    color_mode: u16,
+    color_mode: u32,
 ) -> Option<String> {
     let label = format!("{}mem", if cheap_mode { "" } else { "🧠 " });
     let info = {
@@ -217,7 +217,7 @@ pub fn mem_info(
     cheap_mode: bool,
     ssh: &Option<String>,
     info_fg_color: Option<ColorVec>,
-    color_mode: u16,
+    color_mode: u32,
 ) -> Option<String> {
     let label = format!("{}mem", if cheap_mode { "" } else { "🧠 " });
     let info = {
@@ -295,7 +295,7 @@ fn label_with_info(
     label: &str,
     info: &str,
     info_fg_color: &ColorVec,
-    color_mode: u16,
+    color_mode: u32,
     cheap_mode: bool,
 ) -> String {
     let mut out = String::new();

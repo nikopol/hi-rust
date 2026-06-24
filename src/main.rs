@@ -41,7 +41,7 @@ struct Config {
     text: String,
     font_name: Option<String>,
     info_lines: Vec<String>,
-    color_mode: u16,
+    color_mode: u32,
     ssh: Option<String>,
     maxcols: Option<usize>,
     cheap_mode: bool,
@@ -67,16 +67,16 @@ syntax: {name} [-options] [text]
 default text is your hostname
 
 options:
--fg=color         foreground color/gradient
--bg=color         background color
--c[olor]=1|16|256 set color mode
--1|16|256         set color mode as well
--m[ono]           set color mode to 1
--font=default     font name (available: {fonts})
--s[mall]          set small mode (default font only)
--i[nfo]=kumic     choose info to display
--ssh=remote       ssh hostname
--nw               no wrap
+-fg=color             foreground color/gradient
+-bg=color             background color
+-c[olor]=1|16|256|16M set color mode
+-1|16|256|16M         set color mode as well
+-m[ono]               set color mode to 1
+-font=default         font name (available: {fonts})
+-s[mall]              set small mode (default font only)
+-i[nfo]=kumic         choose info to display
+-ssh=remote           ssh hostname
+-nw|nowrap            no wrap
 -com[ment][=c|p]  # comment mode c or python style
 
 infos can be given as follow:
@@ -132,18 +132,21 @@ available fonts: {fonts}
                             .or_else(|| Self::next_arg(args, &mut i));
                         cfg.info = value;
                     }
+                    "16m" => cfg.color_mode = TRUE_COLOR,
                     "1" | "16" | "256" => cfg.color_mode = name.parse().unwrap(),
                     "m" | "mono" => cfg.color_mode = 1,
                     "c" | "color" | "colors" => {
                         let value = value_in_arg
                             .map(str::to_string)
                             .or_else(|| Self::next_arg(args, &mut i));
-                        cfg.color_mode = match value.unwrap_or("?".to_string()).as_str() {
+                        let color_value = value.unwrap_or("?".to_string()).to_lowercase();
+                        cfg.color_mode = match color_value.as_str() {
                             "mono" => 1,
                             "1" => 1,
                             "16" => 16,
                             "256" => 256,
-                            _ => return Err(String::from("colors can only be mono, 1, 16 or 256")),
+                            "16m" => TRUE_COLOR,
+                            _ => return Err(String::from("colors can only be mono, 1, 16, 256 or 16M")),
                         };
                     }
                     "s" | "small" => cfg.small = true,
@@ -179,7 +182,7 @@ available fonts: {fonts}
             cfg.small = false;
             cfg.color_mode = 16;
         } else if cfg.color_mode == 0 {
-            cfg.color_mode = 256;
+            cfg.color_mode = TRUE_COLOR;
         }
 
         let fg_spec = cfg.fg.as_ref().map(|fg| fg.as_str()).unwrap_or_else(|| {

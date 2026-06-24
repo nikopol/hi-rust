@@ -1,4 +1,5 @@
 use crate::colors::*;
+use unicode_normalization::UnicodeNormalization;
 
 
 /* ███ ███ ██  ███ ███ 
@@ -8,7 +9,7 @@ use crate::colors::*;
    █   ███ █ █  █  ███ */
 
 
-fn trunc_println(line: &str, max_cols: u16, color_mode: u16, prefix: Option<&str>) {
+fn trunc_println(line: &str, max_cols: u16, color_mode: u32, prefix: Option<&str>) {
     if max_cols == u16::MAX {
         println!("{line}");
         return;
@@ -92,11 +93,9 @@ impl Font {
     fn get_chars_idx(charset: &str, text: &str) -> Vec<usize> {
         let sanitized = text
             .to_lowercase()
-            .replace(['é', 'è', 'ê', 'ë'], "e")
-            .replace(['à', 'â', 'ä'], "a")
-            .replace(['û', 'ü'], "u")
-            .replace(['î', 'ï'], "i")
-            .replace(['ÿ', 'ŷ'], "y");
+            .nfd()
+            .filter(|c| !('\u{0300}'..='\u{036F}').contains(c))
+            .collect::<String>();
         let default_idx = charset.chars().position(|c| c == '?').unwrap_or(0);
         sanitized
             .chars()
@@ -111,7 +110,7 @@ impl Font {
         width: usize,
         fg: &ColorVec,
         bg: &Option<ColorVec>,
-        color_mode: u16,
+        color_mode: u32,
         max_cols: u16,
         prefix: Option<&str>
     ) {
@@ -147,7 +146,7 @@ impl Font {
         width: usize,
         fg: &ColorVec,
         bg: &Option<ColorVec>,
-        color_mode: u16,
+        color_mode: u32,
         max_cols: u16,
         prefix: Option<&str>
     ) {
@@ -211,7 +210,7 @@ impl Font {
         maxcols: Option<usize>,
         fg_color: &ColorVec,
         bg_color: &Option<ColorVec>,
-        color_mode: u16,
+        color_mode: u32,
         max_cols: u16,
         prefix: Option<&str>
     ) -> Result<(), String> {

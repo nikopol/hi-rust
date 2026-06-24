@@ -1,6 +1,6 @@
 [package]
 name = "hi"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["niko <nikomomo@gmail.com>"]
 edition = "2021"
 
@@ -8,6 +8,7 @@ edition = "2021"
 
 [dependencies]
 #phf = { version = "0.8", features = ["macros"] }
+unicode-normalization = "0.1"
 
 [profile.release]
 strip = true
